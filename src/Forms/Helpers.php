@@ -62,8 +62,19 @@ class Helpers
 	private static function sanitize(int $type, $value)
 	{
 		if ($type === Form::DATA_TEXT) {
-			return is_scalar($value) ? Strings::normalizeNewLines($value) : null;
-
+			if (is_scalar($value)) {
+                return Strings::normalizeNewLines($value);
+            } elseif (is_array($value)) {
+                foreach ($value as $k => $v) {
+                    $value[ $k ] = $v = static::sanitize($type, $v);
+                    if ($v === null) {
+                        unset($value[ $k ]);
+                    }
+                }
+                return $value;
+            } else {
+                return null;
+            }
 		} elseif ($type === Form::DATA_LINE) {
 			return is_scalar($value) ? Strings::trim(strtr((string) $value, "\r\n", '  ')) : null;
 
